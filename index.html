@@ -1279,7 +1279,7 @@ footer{background:var(--blue-ink);padding:60px 48px 40px;border-top:1px solid rg
       <p style="font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;color:var(--text-sub);font-weight:400;max-width:420px;line-height:1.78">From the people I've had the pleasure of working with.</p>
     </div>
 
-    <div class="testimonials-grid">
+    <div class="testimonials-grid" id="testimonials-grid">
 
       <div class="testi-card reveal">
         <div class="testi-quote-mark">"</div>
@@ -1664,6 +1664,37 @@ document.getElementById('contact-form').addEventListener('submit', async (e) => 
   });
 })();
 
+
+// Testimonials approved in the portal (portal.soundslikeharry.com). Approve one there and it appears here;
+// un-approve it and it goes. The two written above always stay.
+(function () {
+  const grid = document.getElementById('testimonials-grid');
+  if (!grid) return;
+  const have = new Set([...grid.querySelectorAll('.testi-name')].map((n) => n.textContent.trim().toLowerCase()));
+  fetch('https://portal.soundslikeharry.com/.netlify/functions/testimonials')
+    .then((r) => (r.ok ? r.json() : []))
+    .then((list) => {
+      (Array.isArray(list) ? list : []).forEach((t) => {
+        const name = String(t.name || 'Artist').trim();
+        const quote = String(t.quote || '').trim();
+        if (!quote || have.has(name.toLowerCase())) return;
+        have.add(name.toLowerCase());
+        const card = document.createElement('div');
+        card.className = 'testi-card reveal';
+        const mark = document.createElement('div'); mark.className = 'testi-quote-mark'; mark.textContent = '"';
+        const body = document.createElement('p'); body.className = 'testi-body'; body.textContent = quote;
+        const author = document.createElement('div'); author.className = 'testi-author';
+        const avatar = document.createElement('div'); avatar.className = 'testi-avatar'; avatar.textContent = name.charAt(0).toUpperCase();
+        const who = document.createElement('div');
+        const nm = document.createElement('div'); nm.className = 'testi-name'; nm.textContent = name;
+        const credit = document.createElement('div'); credit.className = 'testi-credit'; credit.textContent = 'Artist';
+        who.append(nm, credit); author.append(avatar, who); card.append(mark, body, author);
+        grid.appendChild(card);
+        observer.observe(card);
+      });
+    })
+    .catch(() => {});
+})();
 </script>
 </body>
 </html>
